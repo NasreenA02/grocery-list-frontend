@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import API from "../services/api";
 import Navbar from "../components/Navbar";
 
-function ListDetails() {
+export default function ListDetails() {
   const { id } = useParams();
 
   const [items, setItems] = useState([]);
@@ -11,163 +11,245 @@ function ListDetails() {
 
   const [newItem, setNewItem] = useState({
     name: "",
-    price: 0,
+    price: "",
     category: "",
   });
 
+  const [budget, setBudget] = useState(0);
+
   useEffect(() => {
+    fetchList();
     fetchItems();
-    fetchListInfo();
-  }, [id]);
+  }, []);
+
+  const fetchList = async () => {
+    const res = await API.get(`/lists/${id}`);
+    setListInfo(res.data);
+    setBudget(res.data.budget || 0);
+  };
 
   const fetchItems = async () => {
     const res = await API.get(`/items/${id}`);
     setItems(res.data);
   };
 
-  const fetchListInfo = async () => {
-    const res = await API.get("/lists");
-    const current = res.data.find((list) => list.id === id);
-    setListInfo(current);
-  };
-
-  const updateBudget = async () => {
-    const res = await API.get(`/items/${id}`);
-
-    const remaining = res.data.reduce(
-      (sum, item) =>
-        item.purchased ? sum : sum + Number(item.price),
-      0
-    );
-
-    await API.put(`/lists/${id}`, {
-      total_estimated_cost: remaining,
-    });
-
-    fetchListInfo();
-  };
-
   const addItem = async () => {
+    if (!newItem.name || !newItem.price) return;
+
     await API.post("/items", {
       ...newItem,
       list_id: id,
     });
 
-    setNewItem({ name: "", price: 0, category: "" });
+    setNewItem({ name: "", price: "", category: "" });
     fetchItems();
-    updateBudget();
+    fetchList();
   };
 
   const togglePurchased = async (item) => {
     await API.put(`/items/${item.id}`, {
+      ...item,
       purchased: !item.purchased,
     });
 
     fetchItems();
-    updateBudget();
+    fetchList();
   };
 
   const deleteItem = async (itemId) => {
     await API.delete(`/items/${itemId}`);
     fetchItems();
-    updateBudget();
+    fetchList();
   };
 
-  const totalSpent = items
-    .filter((item) => item.purchased)
-    .reduce((sum, item) => sum + Number(item.price), 0);
+  const updateBudget = async () => {
+    await API.put(`/lists/${id}`, { budget });
+    fetchList();
+  };
 
-  const remaining = items
-    .filter((item) => !item.purchased)
-    .reduce((sum, item) => sum + Number(item.price), 0);
+  const spent = items
+    .filter((i) => i.purchased)
+    .reduce((sum, i) => sum + Number(i.price), 0);
 
-  const isExceeded =
-    listInfo &&
-    listInfo.budget_limit > 0 &&
-    remaining > listInfo.budget_limit;
+  const remaining = budget - spent;
+
+  const percentage =
+    budget > 0
+      ? Math.min((spent / budget) * 100, 100)
+      : 0;
 
   return (
     <>
       <Navbar />
-      <div className="p-10">
 
-        <h2 className="text-2xl font-bold mb-4">Spending Summary</h2>
+      <div className="min-h-screen bg-slate-900 text-white p-8">
 
-        <p>Budget Limit: ₹{listInfo?.budget_limit || 0}</p>
-        <p>Spent: ₹{totalSpent}</p>
-        <p>Remaining: ₹{remaining}</p>
+        {/* TITLE */}
+        <h1 className="text-3xl font-bold mb-8">
+          {listInfo?.title}
+        </h1>
 
-        {isExceeded && (
-          <p className="text-red-600 font-bold mt-2">
-            ⚠ You have exceeded your budget!
-          </p>
-        )}
+        {/* BUDGET SECTION */}
+        <div className="bg-slate-800 p-6 rounded-2xl shadow-lg mb-8">
 
-        <div className="mt-6">
+          <div className="flex gap-4 items-center mb-4">
+            <input
+              type="number"
+              value={budget}
+              onChange={(e) => setBudget(Number(e.target.value))}
+              className="p-3 rounded bg-slate-700 border border-slate-600"
+              placeholder="Set Budget"
+            />
+
+            <button
+              onClick={updateBudget}
+              className="bg-indigo-500 px-5 py-3 rounded-lg font-semibold"
+            >
+              Save Budget
+            </button>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-6">
+
+            <div>
+              <p className="text-slate-400 text-sm">Spent</p>
+              <p className="text-2xl font-bold text-emerald-400">
+                ₹{spent}
+              </p>
+            </div>
+
+            <div>
+              <p className="text-slate-400 text-sm">Remaining</p>
+              <p
+                className={`text-2xl font-bold ${
+                  remaining < 0
+                    ? "text-red-500"
+                    : "text-indigo-400"
+                }`}
+              >
+                ₹{remaining}
+              </p>
+            </div>
+
+            <div>
+              <p className="text-slate-400 text-sm">Progress</p>
+
+              <div className="w-full bg-slate-700 h-3 rounded-full mt-2">
+                <div
+                  className={`h-3 rounded-full ${
+                    remaining < 0
+                      ? "bg-red-500"
+                      : "bg-emerald-500"
+                  }`}
+                  style={{ width: `${percentage}%` }}
+                ></div>
+              </div>
+
+              {remaining < 0 && (
+                <p className="text-red-500 text-xs mt-2">
+                  ⚠ Budget exceeded
+                </p>
+              )}
+            </div>
+
+          </div>
+        </div>
+
+        {/* ADD ITEM */}
+        <div className="bg-slate-800 p-6 rounded-2xl shadow-lg mb-8 flex flex-wrap gap-4">
+
           <input
+            type="text"
             placeholder="Item Name"
-            className="border p-2 mr-2"
+            value={newItem.name}
             onChange={(e) =>
               setNewItem({ ...newItem, name: e.target.value })
             }
+            className="p-3 rounded bg-slate-700 border border-slate-600"
           />
+
           <input
-            placeholder="Category"
-            className="border p-2 mr-2"
-            onChange={(e) =>
-              setNewItem({ ...newItem, category: e.target.value })
-            }
-          />
-          <input
-            placeholder="Price"
             type="number"
-            className="border p-2 mr-2"
+            placeholder="Price"
+            value={newItem.price}
             onChange={(e) =>
               setNewItem({ ...newItem, price: e.target.value })
             }
+            className="p-3 rounded bg-slate-700 border border-slate-600"
           />
+
+          <input
+            type="text"
+            placeholder="Category"
+            value={newItem.category}
+            onChange={(e) =>
+              setNewItem({ ...newItem, category: e.target.value })
+            }
+            className="p-3 rounded bg-slate-700 border border-slate-600"
+          />
+
           <button
             onClick={addItem}
-            className="bg-green-600 text-white px-4 py-2 rounded"
+            className="bg-emerald-500 px-6 py-3 rounded-lg font-semibold"
           >
-            Add
+            Add Item
           </button>
+
         </div>
 
-        {items.map((item) => (
-          <div
-            key={item.id}
-            className={`p-4 mt-4 shadow rounded flex justify-between ${
-              item.purchased ? "bg-gray-200 line-through" : "bg-white"
-            }`}
-          >
-            <div>
-              <div>{item.name}</div>
-              <div className="text-sm text-gray-500">
-                {item.category} • ₹{item.price}
+        {/* ITEMS LIST */}
+        <div className="space-y-4">
+
+          {items.map((item) => (
+            <div
+              key={item.id}
+              className={`p-5 rounded-2xl shadow-lg flex justify-between items-center ${
+                item.purchased
+                  ? "bg-emerald-900"
+                  : "bg-slate-800"
+              }`}
+            >
+              <div>
+                <h3 className="font-semibold text-lg">
+                  {item.name}
+                </h3>
+
+                <p className="text-slate-400 text-sm">
+                  ₹{item.price}
+                </p>
+
+                {item.category && (
+                  <span className="text-xs bg-indigo-600 px-3 py-1 rounded-full mt-2 inline-block">
+                    {item.category}
+                  </span>
+                )}
+              </div>
+
+              <div className="flex gap-4">
+
+                <button
+                  onClick={() => togglePurchased(item)}
+                  className="text-sm text-emerald-400"
+                >
+                  {item.purchased
+                    ? "Unmark"
+                    : "Purchased"}
+                </button>
+
+                <button
+                  onClick={() => deleteItem(item.id)}
+                  className="text-sm text-red-400"
+                >
+                  Delete
+                </button>
+
               </div>
             </div>
+          ))}
 
-            <div className="flex gap-2">
-              <button
-                onClick={() => togglePurchased(item)}
-                className="bg-blue-500 text-white px-3 py-1 rounded"
-              >
-                {item.purchased ? "Undo" : "Purchased"}
-              </button>
+        </div>
 
-              <button
-                onClick={() => deleteItem(item.id)}
-                className="bg-red-500 text-white px-3 py-1 rounded"
-              >
-                Delete
-              </button>
-            </div>
-          </div>
-        ))}
       </div>
     </>
   );
 }
-
-export default ListDetails;

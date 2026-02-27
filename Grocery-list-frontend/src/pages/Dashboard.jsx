@@ -1,15 +1,12 @@
 import { useEffect, useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import API from "../services/api";
 import Navbar from "../components/Navbar";
 
-function Dashboard() {
+export default function Dashboard() {
   const navigate = useNavigate();
   const [lists, setLists] = useState([]);
-  const [newList, setNewList] = useState({
-    title: "",
-    budget_limit: 0,
-  });
+  const [newListTitle, setNewListTitle] = useState("");
 
   useEffect(() => {
     if (!localStorage.getItem("token")) navigate("/");
@@ -21,9 +18,10 @@ function Dashboard() {
     setLists(res.data);
   };
 
-  const createList = async () => {
-    await API.post("/lists", newList);
-    setNewList({ title: "", budget_limit: 0 });
+  const addList = async () => {
+    if (!newListTitle) return;
+    await API.post("/lists", { title: newListTitle });
+    setNewListTitle("");
     fetchLists();
   };
 
@@ -35,70 +33,72 @@ function Dashboard() {
   return (
     <>
       <Navbar />
-      <div className="p-10">
-        <h1 className="text-2xl font-bold mb-6">Your Grocery Lists</h1>
+      <div className="min-h-screen bg-slate-900 text-white p-8">
 
-        <div className="bg-white p-4 shadow rounded mb-6">
+        {/* Add List */}
+        <div className="bg-slate-800 p-6 rounded-2xl shadow-lg mb-10 flex gap-4">
           <input
-            placeholder="List Title"
-            className="border p-2 mr-2"
-            value={newList.title}
-            onChange={(e) =>
-              setNewList({ ...newList, title: e.target.value })
-            }
-          />
-          <input
-            placeholder="Budget Limit"
-            type="number"
-            className="border p-2 mr-2"
-            value={newList.budget_limit}
-            onChange={(e) =>
-              setNewList({ ...newList, budget_limit: e.target.value })
-            }
+            type="text"
+            placeholder="New List Title"
+            value={newListTitle}
+            onChange={(e) => setNewListTitle(e.target.value)}
+            className="flex-1 p-3 rounded bg-slate-700 border border-slate-600"
           />
           <button
-            onClick={createList}
-            className="bg-green-600 text-white px-4 py-2 rounded"
+            onClick={addList}
+            className="bg-indigo-500 hover:bg-indigo-600 px-6 py-3 rounded-lg font-semibold"
           >
             Add List
           </button>
         </div>
 
-        {lists.map((list) => {
-          const exceeded =
-            list.budget_limit &&
-            list.total_estimated_cost > list.budget_limit;
+        {/* Lists */}
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {lists.map((list) => {
+            const spent = Number(list.total_spent || 0);
+            const estimated = Number(list.total_estimated_cost || 0);
+            const exceeded = spent > estimated;
 
-          return (
-            <div
-              key={list.id}
-              className="bg-white p-4 shadow rounded mb-4"
-            >
-              <Link to={`/list/${list.id}`}>
-                <h2 className="font-bold text-lg">{list.title}</h2>
-              </Link>
-
-              <p>Total: ₹{list.total_estimated_cost}</p>
-              <p>Limit: ₹{list.budget_limit}</p>
-
-              {exceeded && (
-                <p className="text-red-600 font-semibold">
-                  ⚠ Budget Exceeded!
-                </p>
-              )}
-
-              <button
-                onClick={() => deleteList(list.id)}
-                className="bg-red-500 text-white px-3 py-1 rounded mt-2"
+            return (
+              <div
+                key={list.id}
+                className="bg-slate-800 p-6 rounded-2xl shadow-lg hover:scale-105 transition duration-300"
               >
-                Delete
-              </button>
-            </div>
-          );
-        })}
+                <Link to={`/list/${list.id}`}>
+                  <h3 className="text-xl font-semibold mb-3">
+                    {list.title}
+                  </h3>
+                </Link>
+
+                <p className="text-slate-400 text-sm">
+                  Estimated: ₹{estimated}
+                </p>
+
+                <p
+                  className={`text-sm mt-1 ${
+                    exceeded ? "text-red-500" : "text-emerald-400"
+                  }`}
+                >
+                  Spent: ₹{spent}
+                </p>
+
+                {exceeded && (
+                  <p className="text-red-500 text-xs mt-2">
+                    ⚠ Budget exceeded
+                  </p>
+                )}
+
+                <button
+                  onClick={() => deleteList(list.id)}
+                  className="text-red-400 text-sm mt-4 hover:text-red-600"
+                >
+                  Delete List
+                </button>
+              </div>
+            );
+          })}
+        </div>
       </div>
     </>
   );
 }
-
-export default Dashboard;

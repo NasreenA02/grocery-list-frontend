@@ -2,105 +2,158 @@ import { useEffect, useState } from "react";
 import API from "../services/api";
 import Navbar from "../components/Navbar";
 
-function Pantry() {
+export default function Pantry() {
   const [items, setItems] = useState([]);
   const [newItem, setNewItem] = useState({
     name: "",
-    quantity: 1,
+    quantity: "",
     expiry_date: "",
   });
 
   useEffect(() => {
-    fetchItems();
+    fetchPantry();
   }, []);
 
-  const fetchItems = async () => {
+  const fetchPantry = async () => {
     const res = await API.get("/pantry");
     setItems(res.data);
   };
 
   const addItem = async () => {
+    if (!newItem.name) return;
+
     await API.post("/pantry", newItem);
-    setNewItem({ name: "", quantity: 1, expiry_date: "" });
-    fetchItems();
+
+    setNewItem({
+      name: "",
+      quantity: "",
+      expiry_date: "",
+    });
+
+    fetchPantry();
   };
 
-  const today = new Date();
+  const deleteItem = async (id) => {
+    await API.delete(`/pantry/${id}`);
+    fetchPantry();
+  };
+
+  const isExpiringSoon = (date) => {
+    if (!date) return false;
+    const today = new Date();
+    const expiry = new Date(date);
+    const diffTime = expiry - today;
+    const diffDays = diffTime / (1000 * 60 * 60 * 24);
+    return diffDays <= 3;
+  };
 
   return (
     <>
       <Navbar />
-      <div className="p-10">
-        <h1 className="text-2xl font-bold mb-6">Pantry</h1>
 
-        <div className="mb-6">
+      <div className="min-h-screen bg-slate-900 text-white p-8">
+
+        <h1 className="text-3xl font-bold mb-8">
+          🧺 Your Pantry
+        </h1>
+
+        {/* ADD ITEM SECTION */}
+        <div className="bg-slate-800 p-6 rounded-2xl shadow-lg mb-10 flex flex-wrap gap-4">
+
           <input
+            type="text"
             placeholder="Item Name"
-            className="border p-2 mr-2"
             value={newItem.name}
             onChange={(e) =>
               setNewItem({ ...newItem, name: e.target.value })
             }
+            className="p-3 rounded bg-slate-700 border border-slate-600"
           />
+
           <input
             type="number"
             placeholder="Quantity"
-            className="border p-2 mr-2"
             value={newItem.quantity}
             onChange={(e) =>
               setNewItem({ ...newItem, quantity: e.target.value })
             }
+            className="p-3 rounded bg-slate-700 border border-slate-600"
           />
+
           <input
             type="date"
-            className="border p-2 mr-2"
             value={newItem.expiry_date}
             onChange={(e) =>
-              setNewItem({ ...newItem, expiry_date: e.target.value })
+              setNewItem({
+                ...newItem,
+                expiry_date: e.target.value,
+              })
             }
+            className="p-3 rounded bg-slate-700 border border-slate-600"
           />
+
           <button
             onClick={addItem}
-            className="bg-green-600 text-white px-4 py-2 rounded"
+            className="bg-emerald-500 px-6 py-3 rounded-lg font-semibold hover:bg-emerald-600 transition"
           >
             Add
           </button>
+
         </div>
 
-        {items.map((item) => {
-          const expiry = new Date(item.expiry_date);
-          const diffDays =
-            (expiry - today) / (1000 * 60 * 60 * 24);
+        {/* PANTRY ITEMS GRID */}
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
 
-          let warningClass = "bg-white";
-
-          if (item.expiry_date) {
-            if (diffDays < 0) {
-              warningClass = "bg-red-200";
-            } else if (diffDays <= 3) {
-              warningClass = "bg-yellow-200";
-            }
-          }
-
-          return (
+          {items.map((item) => (
             <div
               key={item.id}
-              className={`p-4 shadow rounded mb-3 ${warningClass}`}
+              className="bg-slate-800 p-6 rounded-2xl shadow-lg hover:scale-105 transition duration-300"
             >
-              <div className="font-semibold">{item.name}</div>
-              <div>Qty: {item.quantity}</div>
-              <div>
-                Expiry:{" "}
-                {item.expiry_date
-                  ? item.expiry_date
-                  : "Not Set"}
-              </div>
+              <h3 className="text-xl font-semibold mb-2">
+                {item.name}
+              </h3>
+
+              {item.quantity && (
+                <p className="text-slate-400 text-sm">
+                  Quantity: {item.quantity}
+                </p>
+              )}
+
+              {item.expiry_date && (
+                <p
+                  className={`text-sm mt-2 ${
+                    isExpiringSoon(item.expiry_date)
+                      ? "text-red-500"
+                      : "text-indigo-400"
+                  }`}
+                >
+                  Expiry: {item.expiry_date}
+                </p>
+              )}
+
+              {isExpiringSoon(item.expiry_date) && (
+                <p className="text-red-500 text-xs mt-1">
+                  ⚠ Expiring Soon
+                </p>
+              )}
+
+              <button
+                onClick={() => deleteItem(item.id)}
+                className="text-red-400 text-sm mt-4 hover:text-red-600"
+              >
+                Remove
+              </button>
             </div>
-          );
-        })}
+          ))}
+
+          {items.length === 0 && (
+            <p className="text-slate-400">
+              Pantry is empty.
+            </p>
+          )}
+        </div>
+
       </div>
     </>
   );
 }
-
-export default Pantry;
