@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const API = axios.create({
-  baseURL: "http://localhost:5000",
+  baseURL: "https://grocery-list-backend-h6ww.onrender.com",
 });
 
 API.interceptors.request.use((req) => {
