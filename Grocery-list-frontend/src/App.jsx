@@ -4,11 +4,12 @@ import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 import Pantry from "./pages/Pantry";
 import ListDetails from "./pages/ListDetails";
-
+import Landing from "./pages/Landing";
 export default function App() {
   return (
     <Routes>
-      <Route path="/" element={<Login />} />
+      <Route path="/" element={<Landing />} />
+      <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
       <Route path="/dashboard" element={<Dashboard />} />
       <Route path="/pantry" element={<Pantry />} />
