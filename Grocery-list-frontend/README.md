@@ -1,16 +1,72 @@
-# React + Vite
+## Project Title
+Listora – Grocery List & Budget Tracker App
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+## Project Overview
+- Listaura is a full-stack web application that helps users manage their grocery lists, track spending, and maintain a pantry. The app allows users to:
+- Register and log in securely
+- Create, view, and delete grocery lists
+- Add items to lists with prices
+- Track purchased items and move them to a pantry
+- Set budgets for each list and monitor spent vs remaining
+- Manage pantry items with optional expiry dates
+- Enjoy a responsive and visually appealing interface
+- The app is built using React, Node.js, Express, and Supabase as the backend database.
 
-Currently, two official plugins are available:
+## Features Implemented
+- User Features
+- User registration and login with JWT authentication
+- Create multiple grocery lists
+- Add and delete items in lists
+- Mark items as purchased, which moves them to the pantry automatically
+- Track spending and budget per list
+- Pantry management
+- Responsive UI with Tailwind CSS
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Tech Stack
+Frontend :-	React, React Router, Tailwind CSS, Axios
+Backend	:- Node.js, Express, JWT, Supabase client
+Database :-	Supabase (PostgreSQL)
+Hosting	Frontend:- Netlify, Backend:- Render
+Authentication :-	JWT Tokens
 
-## React Compiler
+## Installation Steps
+- Navigate to frontend folder:
+cd Grocery-list-frontend
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- Install dependencies:
+npm install
+Update API base URL in services/api.js:
+const API = axios.create({
+  baseURL: " "https://grocery-list-backend-h6ww.onrender.com",
+",
+});
 
-## Expanding the ESLint configuration
+- Start the development server:
+npm run dev
+Pages:
+/ → Landing page
+/login → Login
+/register → Register
+/dashboard → Dashboard
+/add-list → Add list page
+/list/:id → List details
+/pantry → Pantry
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## Deployment Link
+(https://effortless-dasik-e5075c.netlify.app/)
+
+## Backend API link
+(https://grocery-list-backend-h6ww.onrender.com)
+
+## Login credential (no credential needed)
+
+## Screenshots
+ ![Screenshot of landingpage] (src/Screenshots/landingPage.jpg)
+ ![Screenshot of landingpage] (src/Screenshots/Registration.jpg)
+ ![Screenshot of landingpage] (src/Screenshots/Login.jpg)
+ ![Screenshot of landingpage] (src/Screenshots/Dashboard.jpg)
+ ![Screenshot of landingpage] (src/Screenshots/Listdetails.jpg)
+ ![Screenshot of landingpage] (src/Screenshots/Pantry.jpg)
+
+ ## video walkthrough
+ ![Video Walkthrough Link] (https://drive.google.com/file/d/1TibXUJUtwqYjecd7o1jAj40t234pfH3N/view?usp=sharing)
