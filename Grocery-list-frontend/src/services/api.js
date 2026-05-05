@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const API = axios.create({
-  baseURL: "https://grocery-list-backend-h6ww.onrender.com",
+  baseURL: "https://listora-backend-w2li.onrender.com",
 });
 
 API.interceptors.request.use((req) => {
