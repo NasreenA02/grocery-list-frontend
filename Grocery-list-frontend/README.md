@@ -53,10 +53,10 @@ Pages:
 /pantry → Pantry
 
 ## Deployment Link
-(https://effortless-dasik-e5075c.netlify.app/)
+(https://listor.netlify.app/)
 
 ## Backend API link
-(https://grocery-list-backend-h6ww.onrender.com)
+(https://listora-backend-w2li.onrender.com)
 
 ## Login credential (no credential needed)
 
@@ -69,4 +69,4 @@ Pages:
  ![Screenshot of landingpage] (src/Screenshots/Pantry.jpg)
 
  ## video walkthrough
- ![Video Walkthrough Link] (https://drive.google.com/file/d/1TibXUJUtwqYjecd7o1jAj40t234pfH3N/view?usp=sharing)
+ 
